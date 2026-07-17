@@ -1,0 +1,14 @@
+{
+  "name": "deploypilot-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:frontend": "npm install --prefix frontend",
+    "install:backend": "npm install --prefix backend",
+    "install:all": "npm install --prefix frontend && npm install --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "build:frontend": "npm run build --prefix frontend",
+    "start:backend": "npm start --prefix backend"
+  }
+}

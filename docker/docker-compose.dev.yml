@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  database:
+    image: mongo:latest
+    container_name: deploypilot-db-dev
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data_dev:/data/db
+
+  queue:
+    image: redis:latest
+    container_name: deploypilot-redis-dev
+    ports:
+      - "6379:6379"
+
+volumes:
+  mongodb_data_dev:

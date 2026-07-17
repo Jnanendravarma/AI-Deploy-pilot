@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: deploypilot-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: deploypilot-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://database:27017/deploypilot
+      - REDIS_URL=redis://queue:6379
+    depends_on:
+      - database
+      - queue
+
+  database:
+    image: mongo:latest
+    container_name: deploypilot-db-prod
+    volumes:
+      - mongodb_data_prod:/data/db
+
+  queue:
+    image: redis:latest
+    container_name: deploypilot-redis-prod
+
+volumes:
+  mongodb_data_prod:

@@ -1,0 +1,40 @@
+# Root docker-compose configuration
+# Serves as alias redirecting execution to docker folder compose configs
+
+version: '3.8'
+
+services:
+  # Uses prod compose schema by default
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.backend
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://database:27017/deploypilot
+      - REDIS_URL=redis://queue:6379
+    depends_on:
+      - database
+      - queue
+
+  database:
+    image: mongo:latest
+    volumes:
+      - mongodb_data:/data/db
+
+  queue:
+    image: redis:latest
+
+volumes:
+  mongodb_data:
