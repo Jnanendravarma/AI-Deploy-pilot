@@ -185,7 +185,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
               <div className="flex flex-col min-w-0">
                 <span className="text-xs font-bold text-white leading-tight truncate">{user?.name || 'Developer'}</span>
                 <span className="text-[10px] text-slate-400 font-semibold leading-snug truncate mt-0.5">{user?.email || 'developer@deploypilot.ai'}</span>
-                <span className="text-[9px] text-slate-500 font-medium leading-none uppercase tracking-wider mt-1">{user?.role || 'Developer'}</span>
+                <span className="text-[9px] text-slate-500 font-medium leading-none uppercase tracking-wider mt-1">{user?.role || 'developer'}</span>
               </div>
             </div>
             <div className={`text-slate-500 transition-transform duration-200 flex-shrink-0 ${showUserMenu ? 'rotate-180' : ''}`}>

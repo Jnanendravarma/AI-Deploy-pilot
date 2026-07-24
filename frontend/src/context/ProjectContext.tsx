@@ -17,7 +17,7 @@ export interface UserSession {
   userId: string;
   name: string;
   email: string;
-  role: 'Developer' | 'Admin' | string;
+  role: 'user' | 'developer' | 'admin' | 'team_owner' | 'organization_admin' | string;
   avatar?: string;
 }
 
@@ -181,7 +181,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
           const suUser = session.user;
           const suId = suUser.id;
           const suEmail = suUser.email || '';
-          const suName = suUser.user_metadata?.full_name || suUser.user_metadata?.name || suUser.email?.split('@')[0] || 'Developer';
+          const suName = suUser.user_metadata?.full_name || suUser.user_metadata?.name || suUser.email?.split('@')[0] || 'developer';
           const suAvatar = suUser.user_metadata?.avatar_url || suUser.user_metadata?.picture || '';
           const suProvider = suUser.app_metadata?.provider || 'github';
 
@@ -199,15 +199,15 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 avatar_url: suAvatar,
                 email: suEmail,
                 provider: suProvider,
-                role: 'Developer',
+                role: 'developer',
                 updated_at: new Date().toISOString()
               };
-              await supabase.from('profiles').upsert(newProfile);
+              await supabase.from('profiles').insert(newProfile);
               return {
                 userId: suId,
                 name: suName,
                 email: suEmail,
-                role: 'Developer',
+                role: 'developer',
                 avatar: suAvatar
               };
             }
@@ -216,7 +216,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
               userId: profile.id,
               name: profile.full_name || suName,
               email: profile.email || suEmail,
-              role: profile.role || 'Developer',
+              role: profile.role || 'developer',
               avatar: profile.avatar_url || suAvatar
             };
           } catch {
@@ -224,7 +224,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
               userId: suId,
               name: suName,
               email: suEmail,
-              role: 'Developer',
+              role: 'developer',
               avatar: suAvatar
             };
           }
