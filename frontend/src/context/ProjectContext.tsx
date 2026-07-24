@@ -69,6 +69,7 @@ export interface Toast {
 
 interface ProjectContextType {
   user: UserSession | null;
+  loadingUser: boolean;
   projects: Project[];
   deploymentsByProject: Record<string, Deployment[]>;
   incidents: Incident[];
@@ -83,7 +84,7 @@ interface ProjectContextType {
   triggerToast: (message: string, type?: 'success' | 'error') => void;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshWorkspace: () => Promise<void>;
   addProject: (name: string, framework: string, envs: { key: string; value: string }[]) => Promise<string>;
   deleteProject: (projectId: string) => Promise<void>;
@@ -153,8 +154,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }, 3500);
   };
 
-  // 1. User query with Supabase fallback
-  const { data: user = null, refetch: refetchUser } = useQuery<UserSession | null>({
+  // 1. User query with Supabase profiles auto-creation
+  const { data: user = null, isLoading: loadingUser, refetch: refetchUser } = useQuery<UserSession | null>({
     queryKey: ['user'],
     queryFn: async () => {
       const token = getAccessToken();
@@ -178,13 +179,55 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           const suUser = session.user;
-          return {
-            userId: suUser.id,
-            name: suUser.user_metadata?.full_name || suUser.user_metadata?.name || suUser.email?.split('@')[0] || 'Developer',
-            email: suUser.email || '',
-            role: 'Developer',
-            avatar: suUser.user_metadata?.avatar_url || suUser.user_metadata?.picture
-          };
+          const suId = suUser.id;
+          const suEmail = suUser.email || '';
+          const suName = suUser.user_metadata?.full_name || suUser.user_metadata?.name || suUser.email?.split('@')[0] || 'Developer';
+          const suAvatar = suUser.user_metadata?.avatar_url || suUser.user_metadata?.picture || '';
+          const suProvider = suUser.app_metadata?.provider || 'github';
+
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', suId)
+              .maybeSingle();
+
+            if (!profile) {
+              const newProfile = {
+                id: suId,
+                full_name: suName,
+                avatar_url: suAvatar,
+                email: suEmail,
+                provider: suProvider,
+                role: 'Developer',
+                updated_at: new Date().toISOString()
+              };
+              await supabase.from('profiles').upsert(newProfile);
+              return {
+                userId: suId,
+                name: suName,
+                email: suEmail,
+                role: 'Developer',
+                avatar: suAvatar
+              };
+            }
+
+            return {
+              userId: profile.id,
+              name: profile.full_name || suName,
+              email: profile.email || suEmail,
+              role: profile.role || 'Developer',
+              avatar: profile.avatar_url || suAvatar
+            };
+          } catch {
+            return {
+              userId: suId,
+              name: suName,
+              email: suEmail,
+              role: 'Developer',
+              avatar: suAvatar
+            };
+          }
         }
       } catch {
         // Ignored
@@ -372,7 +415,12 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Ignored
+    }
     clearTokens();
     queryClient.clear();
     triggerToast('Logged out successfully', 'success');
@@ -434,6 +482,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const value = useMemo<ProjectContextType>(() => ({
     user,
+    loadingUser,
     projects,
     deploymentsByProject,
     incidents,
@@ -459,6 +508,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     retryDeployment
   }), [
     user,
+    loadingUser,
     projects,
     deploymentsByProject,
     incidents,

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { DashboardLayout } from '../components/DashboardLayout';
+import { ProtectedRoute } from '../components/ProtectedRoute';
 
 import { LandingPage } from '../pages/Landing/LandingPage';
 import { LoginPage } from '../pages/Login/LoginPage';
@@ -23,69 +24,85 @@ export const AppRouter: React.FC = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<RegisterPage />} />
 
-        {/* Authenticated Workspace Pages (With DashboardLayout) */}
+        {/* Authenticated Workspace Pages (Protected with ProtectedRoute) */}
         <Route
           path="/dashboard"
           element={
-            <DashboardLayout>
-              <DashboardPage />
-            </DashboardLayout>
+            <ProtectedRoute>
+              <DashboardLayout>
+                <DashboardPage />
+              </DashboardLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/upload"
           element={
-            <DashboardLayout>
-              <UploadPage />
-            </DashboardLayout>
+            <ProtectedRoute>
+              <DashboardLayout>
+                <UploadPage />
+              </DashboardLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/deployment"
           element={
-            <DashboardLayout>
-              <DeploymentProgressPage />
-            </DashboardLayout>
+            <ProtectedRoute>
+              <DashboardLayout>
+                <DeploymentProgressPage />
+              </DashboardLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/doctor"
           element={
-            <DashboardLayout>
-              <DoctorPage />
-            </DashboardLayout>
+            <ProtectedRoute>
+              <DashboardLayout>
+                <DoctorPage />
+              </DashboardLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/logs"
           element={
-            <DashboardLayout>
-              <LogsPage />
-            </DashboardLayout>
+            <ProtectedRoute>
+              <DashboardLayout>
+                <LogsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/monitoring"
           element={
-            <DashboardLayout>
-              <MonitoringPage />
-            </DashboardLayout>
+            <ProtectedRoute>
+              <DashboardLayout>
+                <MonitoringPage />
+              </DashboardLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/analytics"
           element={
-            <DashboardLayout>
-              <AnalyticsPage />
-            </DashboardLayout>
+            <ProtectedRoute>
+              <DashboardLayout>
+                <AnalyticsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/settings"
           element={
-            <DashboardLayout>
-              <SettingsPage />
-            </DashboardLayout>
+            <ProtectedRoute>
+              <DashboardLayout>
+                <SettingsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
           }
         />
       </Routes>

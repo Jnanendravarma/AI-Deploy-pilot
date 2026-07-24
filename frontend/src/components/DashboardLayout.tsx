@@ -147,9 +147,9 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                 Account Settings
               </button>
               <button
-                onClick={() => {
+                onClick={async () => {
                   setShowUserMenu(false);
-                  logout();
+                  await logout();
                   navigate('/login');
                 }}
                 className="flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-red-400 hover:bg-red-500/10 hover:text-red-300 transition mt-0.5"
