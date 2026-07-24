@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useProjects } from '../../context/ProjectContext';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import { supabase } from '../../lib/supabase';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,9 +28,22 @@ export const LoginPage: React.FC = () => {
     }
   }, [location.search, navigate, triggerToast]);
 
-  const handleOAuth = (provider: string) => {
-    triggerToast(`Redirecting to ${provider} OAuth...`, 'success');
-    window.location.href = `http://localhost:5000/api/auth/oauth/${provider.toLowerCase()}`;
+  const handleOAuth = async (provider: string) => {
+    if (provider.toLowerCase() === 'github') {
+      triggerToast('Redirecting to GitHub OAuth via Supabase...', 'success');
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: 'http://localhost:5173/dashboard'
+        }
+      });
+      if (error) {
+        triggerToast(error.message, 'error');
+      }
+    } else {
+      triggerToast(`Redirecting to ${provider} OAuth...`, 'success');
+      window.location.href = `http://localhost:5000/api/auth/oauth/${provider.toLowerCase()}`;
+    }
   };
 
   const validateEmail = (val: string) => {

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useProjects } from '../../context/ProjectContext';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import { supabase } from '../../lib/supabase';
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -18,9 +19,22 @@ export const RegisterPage: React.FC = () => {
   const [agreeError, setAgreeError] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0); // 0: Idle, 1: Creating, 2: Registering, 3: Configuring
 
-  const handleOAuth = (provider: string) => {
-    triggerToast(`Redirecting to ${provider} OAuth...`, 'success');
-    window.location.href = `http://localhost:5000/api/auth/oauth/${provider.toLowerCase()}`;
+  const handleOAuth = async (provider: string) => {
+    if (provider.toLowerCase() === 'github') {
+      triggerToast('Redirecting to GitHub OAuth via Supabase...', 'success');
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: 'http://localhost:5173/dashboard'
+        }
+      });
+      if (error) {
+        triggerToast(error.message, 'error');
+      }
+    } else {
+      triggerToast(`Redirecting to ${provider} OAuth...`, 'success');
+      window.location.href = `http://localhost:5000/api/auth/oauth/${provider.toLowerCase()}`;
+    }
   };
 
   const validateEmail = (val: string) => {
