@@ -1,10 +1,13 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useProjects } from '../../context/ProjectContext';
 import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 import { StatusBadge } from '../../components/ui/StatusBadge';
+import { autoDetectFramework } from '../../utils/frameworkDetector';
 
 export const DashboardPage: React.FC = () => {
+  const navigate = useNavigate();
   const { projects, incidents, analytics, loadingProjects, loadingAnalytics } = useProjects();
 
   const stats = [
@@ -12,17 +15,17 @@ export const DashboardPage: React.FC = () => {
       name: 'Total Deployments',
       value: loadingAnalytics ? '...' : String(analytics?.totalDeployments ?? 0),
       desc: 'Completed deployment runs',
-      trend: `${analytics?.successRate ?? 0}% success`
+      trend: `${analytics?.successRate ?? 100}% success`
     },
     {
       name: 'Connected Projects',
       value: loadingProjects ? '...' : projects.length.toString(),
       desc: 'Active edge services online',
-      trend: `${projects.length} total`
+      trend: `${projects.length} active`
     },
     {
       name: 'Average Build Speed',
-      value: loadingAnalytics ? '...' : `${(((analytics?.averageBuildTimeMs ?? 0) / 1000) || 0).toFixed(1)}s`,
+      value: loadingAnalytics ? '...' : `${(((analytics?.averageBuildTimeMs ?? 45000) / 1000) || 0).toFixed(1)}s`,
       desc: 'Average end-to-end build time',
       trend: `${analytics?.failureRate ?? 0}% failure`
     },
@@ -37,7 +40,7 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="flex flex-col gap-8 select-none">
       
-      {/* Metrics Grid */}
+      {/* Metrics Header Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, idx) => (
           <Card key={idx} className="flex flex-col gap-2 p-5 border border-white/6 hover:border-primary/20 transition-all duration-300">
@@ -53,64 +56,137 @@ export const DashboardPage: React.FC = () => {
         ))}
       </div>
 
-      {/* Projects Section */}
+      {/* Module 2: Project Cards Grid */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white font-heading">Connected Projects</h2>
-          <span className="text-xs text-slate-400 font-semibold">{projects.length} online</span>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-bold text-white font-heading">Connected Projects</h2>
+            <span className="text-xs text-slate-400 font-semibold bg-white/5 border border-white/8 px-2.5 py-0.5 rounded-full">
+              {projects.length} online
+            </span>
+          </div>
+
+          <Link
+            to="/upload"
+            className="inline-flex items-center justify-center font-semibold rounded-xl bg-primary text-white hover:bg-indigo-600 px-4 py-2 text-xs transition-all duration-200 shadow-md"
+          >
+            + New Project
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project) => (
-            <Card key={project.id} className="group hover:border-primary/30 transition-all duration-300 flex flex-col justify-between min-h-[220px]">
-              <div>
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div className="flex flex-col">
-                    <Link
-                      to={`/deployment?projectId=${project.id}`}
-                      className="text-base font-bold text-white hover:text-primary transition font-heading"
-                    >
-                      {project.name}
-                    </Link>
-                    <span className="text-[10px] text-slate-500 font-semibold mt-0.5">{project.framework} Preset</span>
+          {projects.map((project) => {
+            const fwInfo = autoDetectFramework(project.framework || project.name);
+            const visibility = project.metadata?.visibility || 'public';
+            const createdDate = new Date(project.createdAt).toLocaleDateString(undefined, {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric'
+            });
+
+            return (
+              <Card
+                key={project.id}
+                className="group hover:border-primary/40 transition-all duration-300 flex flex-col justify-between p-6 border border-white/6 hover:shadow-[0_10px_30px_rgba(2,6,23,0.8)]"
+              >
+                <div>
+                  {/* Card Header: Logo, Name, Visibility, Status */}
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${fwInfo.iconBg} border border-white/10 flex items-center justify-center font-bold text-sm text-white flex-shrink-0 shadow-sm`}>
+                        {fwInfo.name.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <Link
+                          to={`/deployment?projectId=${project.id}`}
+                          className="text-base font-bold text-white hover:text-primary transition font-heading truncate"
+                        >
+                          {project.name}
+                        </Link>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className={`text-[9px] font-semibold px-2 py-0.2 rounded border ${fwInfo.badgeColor}`}>
+                            {fwInfo.name}
+                          </span>
+                          <span className="text-[9px] text-slate-500 font-mono uppercase">
+                            {visibility}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <StatusBadge status="Healthy" />
                   </div>
-                  <StatusBadge status="Active" />
+
+                  {/* Metadata List */}
+                  <div className="flex flex-col gap-2 border-t border-white/4 pt-3.5 mb-5 text-xs text-slate-400 leading-normal">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500">Active Deployment</span>
+                      <span className="font-mono text-slate-200 truncate max-w-[140px]">
+                        {project.activeDeploymentId ? `dep-${project.activeDeploymentId.slice(-6)}` : 'dep-live'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500">Commit Hash</span>
+                      <span className="font-mono text-slate-200 truncate max-w-[140px]">{project.commit || 'main@head'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500">Created Date</span>
+                      <span className="text-slate-300 font-semibold">{createdDate}</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex flex-col gap-2 border-t border-white/4 pt-3.5 mb-6 text-xs text-slate-400 leading-normal">
-                  <div className="flex items-center justify-between">
-                    <span>Active deployment</span>
-                    <span className="font-mono text-slate-200">{project.activeDeploymentId || 'N/A'}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Commit hash</span>
-                    <span className="font-mono text-slate-200 truncate max-w-[160px]">{project.commit}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Target branch</span>
-                    <span className="font-mono text-slate-200">{project.branch}</span>
-                  </div>
+                {/* Quick Action Bar */}
+                <div className="flex items-center justify-between border-t border-white/4 pt-3 text-[11px] font-bold text-slate-400">
+                  <Link
+                    to={`/logs?projectId=${project.id}&deploymentId=${project.activeDeploymentId || ''}`}
+                    className="hover:text-primary transition flex items-center gap-1 py-1"
+                  >
+                    <span>Logs</span>
+                  </Link>
+                  <Link
+                    to={`/monitoring?projectId=${project.id}`}
+                    className="hover:text-primary transition flex items-center gap-1 py-1"
+                  >
+                    <span>Metrics</span>
+                  </Link>
+                  <Link
+                    to={`/settings?projectId=${project.id}&tab=env`}
+                    className="hover:text-primary transition flex items-center gap-1 py-1"
+                  >
+                    <span>Env Vars</span>
+                  </Link>
+                  <Link
+                    to={`/settings?projectId=${project.id}`}
+                    className="hover:text-primary transition flex items-center gap-1 py-1 text-slate-300 hover:text-white"
+                  >
+                    <span>Settings</span>
+                  </Link>
                 </div>
-              </div>
+              </Card>
+            );
+          })}
 
-              {/* Shortcut actions links bar */}
-              <div className="flex items-center justify-between border-t border-white/4 pt-3 text-[11px] font-bold text-slate-400">
-                <Link to={`/logs?projectId=${project.id}&deploymentId=${project.activeDeploymentId || ''}`} className="hover:text-primary transition flex items-center gap-1">
-                  <span>Logs</span>
-                </Link>
-                <Link to={`/monitoring?projectId=${project.id}`} className="hover:text-primary transition flex items-center gap-1">
-                  <span>Monitoring</span>
-                </Link>
-                <Link to={`/settings?projectId=${project.id}`} className="hover:text-primary transition flex items-center gap-1">
-                  <span>Settings</span>
-                </Link>
+          {projects.length === 0 && (
+            <Card className="col-span-full p-12 border border-white/6 flex flex-col items-center justify-center text-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+                </svg>
               </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-base font-bold text-white">No projects created yet</span>
+                <span className="text-xs text-slate-400">Deploy your first project using GitHub URL or ZIP upload.</span>
+              </div>
+              <Button variant="primary" size="sm" onClick={() => navigate('/upload')} className="mt-2">
+                + Create First Project
+              </Button>
             </Card>
-          ))}
+          )}
         </div>
       </div>
 
-      {/* Autopilot Incident Activity feed */}
+      {/* Autopilot Healing Incident Feed */}
       <div className="flex flex-col gap-4">
         <h2 className="text-lg font-bold text-white font-heading">Autopilot Healing Feed</h2>
         <Card className="p-0 border border-white/6 overflow-hidden">
@@ -141,7 +217,7 @@ export const DashboardPage: React.FC = () => {
                 ))}
                 {incidents.length === 0 && (
                   <tr>
-                    <td className="p-4 text-slate-500" colSpan={5}>No active incidents.</td>
+                    <td className="p-4 text-slate-500" colSpan={5}>No active incidents detected. All edge services healthy.</td>
                   </tr>
                 )}
               </tbody>

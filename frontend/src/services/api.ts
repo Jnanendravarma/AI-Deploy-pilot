@@ -101,6 +101,18 @@ export const authApi = {
 export const projectApi = {
   list: () => apiRequest<Array<Record<string, unknown>>>('/projects'),
   create: (body: Record<string, unknown>) => apiRequest<Record<string, unknown>>('/projects', { method: 'POST', body: JSON.stringify(body) }),
+  upload: async (formData: FormData) => {
+    const token = getAccessToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}/projects/upload`, {
+      method: 'POST',
+      headers,
+      body: formData
+    });
+    return parseResponse<Record<string, unknown>>(res);
+  },
+  importGithub: (body: Record<string, unknown>) => apiRequest<Record<string, unknown>>('/projects/import-github', { method: 'POST', body: JSON.stringify(body) }),
   update: (projectId: string, body: Record<string, unknown>) => apiRequest<Record<string, unknown>>(`/projects/${projectId}`, { method: 'PATCH', body: JSON.stringify(body) }),
   archive: (projectId: string) => apiRequest<Record<string, unknown>>(`/projects/${projectId}/archive`, { method: 'PATCH' }),
   remove: (projectId: string) => apiRequest<Record<string, unknown>>(`/projects/${projectId}`, { method: 'DELETE' })
