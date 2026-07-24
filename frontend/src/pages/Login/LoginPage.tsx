@@ -4,11 +4,12 @@ import { useProjects } from '../../context/ProjectContext';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { supabase } from '../../lib/supabase';
+import { setTokens } from '../../services/api';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { triggerToast, login } = useProjects();
+  const { triggerToast, login, refreshWorkspace } = useProjects();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -16,17 +17,21 @@ export const LoginPage: React.FC = () => {
   const [loadingStep, setLoadingStep] = useState(0); // 0: Idle, 1: Authenticating, 2: Credentials check, 3: Workspace load
 
   useEffect(() => {
-    const query = new URLSearchParams(location.search);
-    const accessToken = query.get('accessToken');
-    const refreshToken = query.get('refreshToken');
+    const handleOAuthReturn = async () => {
+      const query = new URLSearchParams(location.search);
+      const accessToken = query.get('accessToken');
+      const refreshToken = query.get('refreshToken');
 
-    if (accessToken && refreshToken) {
-      localStorage.setItem('deploypilot_access_token', accessToken);
-      localStorage.setItem('deploypilot_refresh_token', refreshToken);
-      triggerToast('OAuth login successful', 'success');
-      navigate('/dashboard');
-    }
-  }, [location.search, navigate, triggerToast]);
+      if (accessToken && refreshToken) {
+        setTokens(accessToken, refreshToken);
+        triggerToast('OAuth login successful', 'success');
+        await refreshWorkspace();
+        navigate('/dashboard', { replace: true });
+      }
+    };
+
+    handleOAuthReturn();
+  }, [location.search, navigate, triggerToast, refreshWorkspace]);
 
   const handleOAuth = async (provider: string) => {
     if (provider.toLowerCase() === 'github') {

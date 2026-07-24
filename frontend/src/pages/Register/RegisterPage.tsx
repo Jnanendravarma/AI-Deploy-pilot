@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useProjects } from '../../context/ProjectContext';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { supabase } from '../../lib/supabase';
+import { setTokens } from '../../services/api';
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
-  const { triggerToast, signup } = useProjects();
+  const location = useLocation();
+  const { triggerToast, signup, refreshWorkspace } = useProjects();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,6 +20,23 @@ export const RegisterPage: React.FC = () => {
   const [passwordError, setPasswordError] = useState('');
   const [agreeError, setAgreeError] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0); // 0: Idle, 1: Creating, 2: Registering, 3: Configuring
+
+  useEffect(() => {
+    const handleOAuthReturn = async () => {
+      const query = new URLSearchParams(location.search);
+      const accessToken = query.get('accessToken');
+      const refreshToken = query.get('refreshToken');
+
+      if (accessToken && refreshToken) {
+        setTokens(accessToken, refreshToken);
+        triggerToast('OAuth login successful', 'success');
+        await refreshWorkspace();
+        navigate('/dashboard', { replace: true });
+      }
+    };
+
+    handleOAuthReturn();
+  }, [location.search, navigate, triggerToast, refreshWorkspace]);
 
   const handleOAuth = async (provider: string) => {
     if (provider.toLowerCase() === 'github') {
