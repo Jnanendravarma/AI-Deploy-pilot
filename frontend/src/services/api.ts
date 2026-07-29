@@ -146,4 +146,8 @@ export const notificationApi = {
   list: () => apiRequest<Array<Record<string, unknown>>>('/notifications')
 };
 
+export const aiApi = {
+  getDiagnosis: (deploymentId: string) => apiRequest<Record<string, unknown>>(`/ai/diagnosis/${deploymentId}`),
+};
+
 export { setTokens, clearTokens, getAccessToken };

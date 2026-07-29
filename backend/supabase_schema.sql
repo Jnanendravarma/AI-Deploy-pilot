@@ -60,10 +60,91 @@ CREATE TABLE IF NOT EXISTS deployment_errors (
   confidence_score NUMERIC,
   suggested_fix TEXT,
   documentation_link TEXT,
+  severity TEXT DEFAULT 'Medium',
   resolved BOOLEAN DEFAULT false,
   resolved_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+-- Create AI Diagnoses table
+CREATE TABLE IF NOT EXISTS ai_diagnoses (
+  id TEXT PRIMARY KEY,
+  deployment_id TEXT NOT NULL REFERENCES deployments(id) ON DELETE CASCADE,
+  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  error_type TEXT NOT NULL,
+  category TEXT DEFAULT 'Build',
+  severity TEXT DEFAULT 'Medium',
+  confidence_score INTEGER DEFAULT 95,
+  root_cause TEXT NOT NULL,
+  human_explanation TEXT NOT NULL,
+  affected_files JSONB DEFAULT '[]'::jsonb,
+  suggested_fixes JSONB DEFAULT '[]'::jsonb,
+  estimated_fix_time TEXT DEFAULT '2 mins',
+  auto_fixable BOOLEAN DEFAULT false,
+  auto_fix_action JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+-- Create Fix Recommendations table
+CREATE TABLE IF NOT EXISTS fix_recommendations (
+  id TEXT PRIMARY KEY,
+  diagnosis_id TEXT NOT NULL REFERENCES ai_diagnoses(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  type TEXT DEFAULT 'command',
+  confidence NUMERIC DEFAULT 95,
+  is_safe BOOLEAN DEFAULT true,
+  command TEXT,
+  file_path TEXT,
+  line_number INTEGER,
+  old_code TEXT,
+  new_code TEXT,
+  docs_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+-- Create Error Categories table
+CREATE TABLE IF NOT EXISTS error_categories (
+  id TEXT PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  description TEXT,
+  count INTEGER DEFAULT 0
+);
+
+-- Create Knowledge Base table
+CREATE TABLE IF NOT EXISTS knowledge_base (
+  id TEXT PRIMARY KEY,
+  error_signature TEXT NOT NULL,
+  category TEXT NOT NULL,
+  root_cause TEXT NOT NULL,
+  suggested_fix TEXT NOT NULL,
+  frequency INTEGER DEFAULT 1,
+  confidence_score INTEGER DEFAULT 90,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+-- Create AI Conversations table
+CREATE TABLE IF NOT EXISTS ai_conversations (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  deployment_id TEXT,
+  messages JSONB DEFAULT '[]'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+-- Create Deployment Reports table
+CREATE TABLE IF NOT EXISTS deployment_reports (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  deployment_id TEXT REFERENCES deployments(id) ON DELETE CASCADE,
+  health_score INTEGER DEFAULT 90,
+  summary TEXT NOT NULL,
+  report_data JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
 -- Create Deployment Logs table
@@ -89,11 +170,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
--- ==============================================================================
--- PROFILES TABLE & ROW LEVEL SECURITY (RLS) POLICIES
--- ==============================================================================
-
--- Create Profiles Table (linked to Supabase auth.users)
+-- Profiles Table
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name TEXT,
@@ -105,26 +182,11 @@ CREATE TABLE IF NOT EXISTS profiles (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
--- Enable Row Level Security (RLS) on profiles table
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-
--- Drop existing policies if any to prevent duplicate policy errors
 DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
 DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
 
--- RLS Policy 1: Users can view only their own profile
-CREATE POLICY "Users can view own profile"
-  ON profiles FOR SELECT
-  USING (auth.uid() = id);
-
--- RLS Policy 2: Users can update only their own profile
-CREATE POLICY "Users can update own profile"
-  ON profiles FOR UPDATE
-  USING (auth.uid() = id);
-
--- RLS Policy 3: Users can insert only their own profile
-CREATE POLICY "Users can insert own profile"
-  ON profiles FOR INSERT
-  WITH CHECK (auth.uid() = id);
-
+CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
