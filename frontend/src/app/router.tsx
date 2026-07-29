@@ -11,6 +11,7 @@ import { UploadPage } from '../pages/Projects/UploadPage';
 import { DeploymentProgressPage } from '../pages/Deployment/DeploymentProgressPage';
 import { DeploymentHistoryPage } from '../pages/Deployment/DeploymentHistoryPage';
 import { DoctorPage } from '../pages/Doctor/DoctorPage';
+import { AIChatPage } from '../pages/AIChat/AIChatPage';
 import { LogsPage } from '../pages/Logs/LogsPage';
 import { MonitoringPage } from '../pages/Monitoring/MonitoringPage';
 import { AnalyticsPage } from '../pages/Analytics/AnalyticsPage';
@@ -72,6 +73,16 @@ export const AppRouter: React.FC = () => {
             <ProtectedRoute>
               <DashboardLayout>
                 <DoctorPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ai-chat"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <AIChatPage />
               </DashboardLayout>
             </ProtectedRoute>
           }

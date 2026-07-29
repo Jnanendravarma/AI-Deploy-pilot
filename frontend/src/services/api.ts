@@ -148,6 +148,7 @@ export const notificationApi = {
 
 export const aiApi = {
   getDiagnosis: (deploymentId: string) => apiRequest<Record<string, unknown>>(`/ai/diagnosis/${deploymentId}`),
+  handleChat: (body: { message: string; deploymentId?: string }) => apiRequest<{ response: string }>('/ai/chat', { method: 'POST', body: JSON.stringify(body) }),
 };
 
 export { setTokens, clearTokens, getAccessToken };
