@@ -41,6 +41,12 @@ const updateProject = asyncHandler(async (req, res) => {
   return sendSuccess(res, project, 'Project updated');
 });
 
+const updateEnvironment = asyncHandler(async (req, res) => {
+  const { envVars } = req.body;
+  const project = await projectService.updateProject(req.user.userId, req.params.projectId, { envVars });
+  return sendSuccess(res, project, 'Environment variables updated');
+});
+
 module.exports = {
   listProjects,
   createProject,
@@ -48,5 +54,6 @@ module.exports = {
   deleteProject,
   uploadProject,
   importGithub,
-  updateProject
+  updateProject,
+  updateEnvironment
 };

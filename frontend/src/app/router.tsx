@@ -9,6 +9,7 @@ import { RegisterPage } from '../pages/Register/RegisterPage';
 import { DashboardPage } from '../pages/Dashboard/DashboardPage';
 import { UploadPage } from '../pages/Projects/UploadPage';
 import { DeploymentProgressPage } from '../pages/Deployment/DeploymentProgressPage';
+import { DeploymentHistoryPage } from '../pages/Deployment/DeploymentHistoryPage';
 import { DoctorPage } from '../pages/Doctor/DoctorPage';
 import { LogsPage } from '../pages/Logs/LogsPage';
 import { MonitoringPage } from '../pages/Monitoring/MonitoringPage';
@@ -51,6 +52,16 @@ export const AppRouter: React.FC = () => {
             <ProtectedRoute>
               <DashboardLayout>
                 <DeploymentProgressPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/history"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <DeploymentHistoryPage />
               </DashboardLayout>
             </ProtectedRoute>
           }

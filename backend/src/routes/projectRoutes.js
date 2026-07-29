@@ -8,16 +8,16 @@ const { createProjectSchema, projectIdSchema, importGithubSchema } = require('..
 
 const router = express.Router();
 
-// Multer storage settings for zipped packages
 const upload = multer({
   dest: path.join(__dirname, '../../uploads'),
-  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+  limits: { fileSize: 50 * 1024 * 1024 }
 });
 
 router.get('/', requireAuth, controller.listProjects);
 router.post('/', requireAuth, validateRequest(createProjectSchema), controller.createProject);
 router.patch('/:projectId/archive', requireAuth, validateRequest(projectIdSchema), controller.archiveProject);
 router.patch('/:projectId', requireAuth, validateRequest(projectIdSchema), controller.updateProject);
+router.post('/:projectId/environment', requireAuth, validateRequest(projectIdSchema), controller.updateEnvironment);
 router.delete('/:projectId', requireAuth, validateRequest(projectIdSchema), controller.deleteProject);
 
 router.post('/upload', requireAuth, upload.single('file'), controller.uploadProject);

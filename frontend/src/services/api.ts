@@ -114,16 +114,23 @@ export const projectApi = {
   },
   importGithub: (body: Record<string, unknown>) => apiRequest<Record<string, unknown>>('/projects/import-github', { method: 'POST', body: JSON.stringify(body) }),
   update: (projectId: string, body: Record<string, unknown>) => apiRequest<Record<string, unknown>>(`/projects/${projectId}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  updateEnvironment: (projectId: string, envVars: Array<{ key: string; value: string }>) =>
+    apiRequest<Record<string, unknown>>(`/projects/${projectId}/environment`, { method: 'POST', body: JSON.stringify({ envVars }) }),
   archive: (projectId: string) => apiRequest<Record<string, unknown>>(`/projects/${projectId}/archive`, { method: 'PATCH' }),
   remove: (projectId: string) => apiRequest<Record<string, unknown>>(`/projects/${projectId}`, { method: 'DELETE' })
 };
 
 export const deploymentApi = {
   list: (projectId: string) => apiRequest<Array<Record<string, unknown>>>(`/deployments?projectId=${encodeURIComponent(projectId)}`),
+  getById: (deploymentId: string) => apiRequest<Record<string, unknown>>(`/deployments/${deploymentId}`),
+  getStatus: (deploymentId: string) => apiRequest<{ status: string; steps: any[] }>(`/deployments/${deploymentId}/status`),
   create: (body: { projectId: string; branch?: string; commitSha?: string }) =>
     apiRequest<Record<string, unknown>>('/deployments', { method: 'POST', body: JSON.stringify(body) }),
   logs: (deploymentId: string, query = '') => apiRequest<Array<Record<string, unknown>>>(`/deployments/${deploymentId}/logs${query ? `?${query}` : ''}`),
   retry: (deploymentId: string) => apiRequest<Record<string, unknown>>(`/deployments/${deploymentId}/retry`, { method: 'POST' }),
+  cancel: (deploymentId: string) => apiRequest<Record<string, unknown>>(`/deployments/${deploymentId}/cancel`, { method: 'POST' }),
+  rollback: (deploymentId: string) => apiRequest<Record<string, unknown>>(`/deployments/${deploymentId}/rollback`, { method: 'POST' }),
+  analytics: (projectId?: string) => apiRequest<Record<string, unknown>>(`/deployments/analytics${projectId ? `?projectId=${encodeURIComponent(projectId)}` : ''}`),
   error: (deploymentId: string) => apiRequest<Record<string, unknown>>(`/deployments/${deploymentId}/error`)
 };
 
