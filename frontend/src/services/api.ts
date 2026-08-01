@@ -147,8 +147,20 @@ export const notificationApi = {
 };
 
 export const aiApi = {
+  analyze: (deploymentId: string) => apiRequest<Record<string, unknown>>('/ai/analyze', { method: 'POST', body: JSON.stringify({ deploymentId }) }),
   getDiagnosis: (deploymentId: string) => apiRequest<Record<string, unknown>>(`/ai/diagnosis/${deploymentId}`),
-  handleChat: (body: { message: string; deploymentId?: string }) => apiRequest<{ response: string }>('/ai/chat', { method: 'POST', body: JSON.stringify(body) }),
+  handleChat: (body: { message: string; deploymentId?: string; projectId?: string; history?: Array<{ sender: 'user' | 'ai'; text: string }> }) =>
+    apiRequest<{ response: string }>('/ai/chat', { method: 'POST', body: JSON.stringify(body) }),
+  fix: (body: { projectId: string; deploymentId?: string; fixAction?: Record<string, unknown> }) => apiRequest<Record<string, unknown>>('/ai/fix', { method: 'POST', body: JSON.stringify(body) }),
+  getHistory: (projectId: string) => apiRequest<Array<Record<string, unknown>>>(`/ai/history?projectId=${encodeURIComponent(projectId)}`),
+  getReport: (projectId: string, deploymentId?: string) =>
+    apiRequest<Record<string, unknown>>(`/ai/report?projectId=${encodeURIComponent(projectId)}${deploymentId ? `&deploymentId=${encodeURIComponent(deploymentId)}` : ''}`),
+  getRecommendations: (projectId: string) => apiRequest<Array<Record<string, unknown>>>(`/ai/recommendations?projectId=${encodeURIComponent(projectId)}`),
+  getSecurityScan: (projectId: string) => apiRequest<Record<string, unknown>>(`/ai/security-scan?projectId=${encodeURIComponent(projectId)}`),
+  getPerformanceScan: (projectId: string) => apiRequest<Record<string, unknown>>(`/ai/performance-scan?projectId=${encodeURIComponent(projectId)}`),
+  getKnowledgeBase: (query = '') => apiRequest<Array<Record<string, unknown>>>(`/ai/knowledge-base${query ? `?q=${encodeURIComponent(query)}` : ''}`),
+  feedback: (body: { projectId?: string; deploymentId?: string; rating: number; message?: string; category?: string }) =>
+    apiRequest<Record<string, unknown>>('/ai/feedback', { method: 'POST', body: JSON.stringify(body) }),
 };
 
 export { setTokens, clearTokens, getAccessToken };

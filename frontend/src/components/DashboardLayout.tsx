@@ -28,6 +28,19 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       )
     },
     {
+      name: 'Doctor',
+      path: '/doctor',
+      icon: (
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2v4" />
+          <path d="M10 6h4" />
+          <path d="M7 10h10" />
+          <path d="M6 14h12" />
+          <path d="M9 18h6" />
+        </svg>
+      )
+    },
+    {
       name: 'Monitoring',
       path: '/monitoring',
       icon: (
@@ -64,6 +77,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
     if (path.startsWith('/upload')) return 'Dashboard / Import Project';
     if (path.startsWith('/deployment')) return 'Projects / Active Deployment Pipeline';
     if (path.startsWith('/doctor')) return 'Diagnostics / AI Deployment Doctor';
+    if (path.startsWith('/ai-doctor')) return 'Diagnostics / AI Deployment Doctor';
     if (path.startsWith('/logs')) return 'Telemetry / Live Console Stream';
     if (path.startsWith('/monitoring')) return 'Infrastructure / Telemetry Monitoring';
     if (path.startsWith('/analytics')) return 'Analytics / Performance Summary';

@@ -8,6 +8,7 @@ const { getRecommendationsForProject } = require('../ai/RecommendationService');
 const { runSecurityScan } = require('../ai/SecurityAnalyzer');
 const { runPerformanceScan } = require('../ai/PerformanceAnalyzer');
 const { generateDeploymentReport } = require('../ai/ReportGenerator');
+const { aiFeedbackRepository } = require('../repositories/aiFeedbackRepository');
 
 const analyzeDeployment = asyncHandler(async (req, res) => {
   const { deploymentId } = req.body;
@@ -22,7 +23,11 @@ const getDiagnosis = asyncHandler(async (req, res) => {
 });
 
 const handleChat = asyncHandler(async (req, res) => {
-  const result = await chatWithAI(req.user.userId, req.body);
+  const result = await chatWithAI(req.user.userId, {
+    ...req.body,
+    question: req.body.question || req.body.message || '',
+    history: Array.isArray(req.body.history) ? req.body.history : []
+  });
   return sendSuccess(res, result, 'AI response generated');
 });
 
@@ -61,7 +66,16 @@ const getReport = asyncHandler(async (req, res) => {
 });
 
 const submitFeedback = asyncHandler(async (req, res) => {
-  return sendSuccess(res, { received: true }, 'Feedback submitted');
+  const feedback = await aiFeedbackRepository.create({
+    userId: req.user.userId,
+    projectId: req.body.projectId || null,
+    deploymentId: req.body.deploymentId || null,
+    rating: Number(req.body.rating || 5),
+    category: req.body.category || 'general',
+    message: req.body.message || ''
+  });
+
+  return sendSuccess(res, feedback, 'Feedback submitted', 201);
 });
 
 const getHistory = asyncHandler(async (req, res) => {

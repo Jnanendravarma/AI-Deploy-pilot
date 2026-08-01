@@ -78,6 +78,16 @@ export const AppRouter: React.FC = () => {
           }
         />
         <Route
+          path="/ai-doctor"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <DoctorPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/ai-chat"
           element={
             <ProtectedRoute>

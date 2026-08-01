@@ -136,6 +136,19 @@ CREATE TABLE IF NOT EXISTS ai_conversations (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
+-- Create AI Feedback table
+CREATE TABLE IF NOT EXISTS ai_feedback (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,
+  deployment_id TEXT REFERENCES deployments(id) ON DELETE CASCADE,
+  rating INTEGER NOT NULL DEFAULT 5,
+  category TEXT DEFAULT 'general',
+  message TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
 -- Create Deployment Reports table
 CREATE TABLE IF NOT EXISTS deployment_reports (
   id TEXT PRIMARY KEY,
@@ -190,3 +203,8 @@ DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
 CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+
+CREATE INDEX IF NOT EXISTS idx_ai_diagnoses_deployment_id ON ai_diagnoses(deployment_id);
+CREATE INDEX IF NOT EXISTS idx_ai_diagnoses_project_id ON ai_diagnoses(project_id);
+CREATE INDEX IF NOT EXISTS idx_ai_feedback_user_id ON ai_feedback(user_id);
+CREATE INDEX IF NOT EXISTS idx_ai_feedback_deployment_id ON ai_feedback(deployment_id);

@@ -6,6 +6,7 @@ const { deploymentLogRepository } = require('../repositories/deploymentLogReposi
 const { deploymentErrorRepository } = require('../repositories/deploymentErrorRepository');
 const { enqueueDeploymentJob } = require('../queues/deploymentQueue');
 const { analyzeDeploymentError } = require('../doctor/doctor');
+const { analyzeDeploymentFailure } = require('../ai/DiagnosisService');
 const { cancelDeployment, rollbackDeployment } = require('../deployment/DeploymentRunner');
 const { appendDeploymentLog } = require('../deployment/Logger');
 const { sendStatus } = require('../deployment/SocketEmitter');
@@ -105,6 +106,14 @@ async function updateDeploymentStatus(deploymentId, status, detail) {
 async function failDeployment(deploymentId, errorMessage) {
   const deployment = await updateDeploymentStatus(deploymentId, 'Failed', errorMessage);
   const diagnosis = analyzeDeploymentError(errorMessage);
+  const logs = await deploymentLogRepository.listByDeployment(deploymentId).catch(() => []);
+
+  try {
+    const project = await projectRepository.findById(deployment.projectId);
+    if (project) {
+      await analyzeDeploymentFailure({ project, deployment, logs });
+    }
+  } catch (_) {}
 
   const recorded = await deploymentErrorRepository.create({
     deploymentId: deployment._id ? deployment._id.toString() : deployment.id,

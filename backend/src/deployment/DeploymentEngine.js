@@ -17,6 +17,7 @@ const fs = require('fs');
 const path = require('path');
 const { deploymentRepository } = require('../repositories/deploymentRepository');
 const { projectRepository } = require('../repositories/projectRepository');
+const { deploymentLogRepository } = require('../repositories/deploymentLogRepository');
 const { appendDeploymentLog } = require('./Logger');
 const { sendStatus } = require('./SocketEmitter');
 const { downloadRepository } = require('./RepositoryDownloader');
@@ -30,6 +31,7 @@ const {
   stopAndRemoveContainer
 } = require('./DockerService');
 const { verifyHealth } = require('./HealthChecker');
+const { analyzeDeploymentFailure } = require('../ai/DiagnosisService');
 
 const TIMELINE_STEPS = [
   'Queued',
@@ -234,6 +236,12 @@ async function executePipeline(deploymentId) {
     }
 
     sendStatus(deployment._id ? deployment._id.toString() : deployment.id, { status: 'Failed', error: error.message });
+
+    try {
+      const deploymentIdValue = deployment._id ? deployment._id.toString() : deployment.id;
+      const logs = await deploymentLogRepository.listByDeployment(deploymentIdValue);
+      await analyzeDeploymentFailure({ project, deployment, logs });
+    } catch (_) {}
 
     if (deployment.containerId) {
       await stopAndRemoveContainer(deployment.containerId);

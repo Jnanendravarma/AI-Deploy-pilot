@@ -4,7 +4,6 @@ import { useMutation } from '@tanstack/react-query';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Loader } from '../../components/ui/Loader';
 
 import { aiApi } from '../../services/api';
 
@@ -45,7 +44,7 @@ export const AIChatPage: React.FC = () => {
               </div>
             </div>
           ))}
-          {mutation.isPending && <Loader>AI is thinking...</Loader>}
+          {mutation.isPending && <div className="text-sm text-slate-400">AI is thinking...</div>}
         </div>
         <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-700 flex gap-2">
           <Input 

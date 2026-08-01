@@ -186,7 +186,7 @@ export const DeploymentProgressPage: React.FC = () => {
       setActionLoading(true);
       await deploymentApi.cancel(deploymentId);
       setStatus('Cancelled');
-      triggerToast('Deployment cancelled', 'info');
+      triggerToast('Deployment cancelled', 'success');
     } catch (err) {
       triggerToast(err instanceof Error ? err.message : 'Cancel failed', 'error');
     } finally {
@@ -233,6 +233,10 @@ export const DeploymentProgressPage: React.FC = () => {
         return <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">{st}</span>;
     }
   };
+
+  if (loading) {
+    return <div className="py-12 text-sm text-slate-400">Loading deployment progress...</div>;
+  }
 
   return (
     <div className="flex flex-col gap-6 select-none max-w-7xl mx-auto">
@@ -293,7 +297,7 @@ export const DeploymentProgressPage: React.FC = () => {
 
             {/* Step Stepper List */}
             <div className="flex flex-col gap-4 mt-2">
-              {(steps.length ? steps : TIMELINE_STEPS.map((n, i) => ({ name: n, status: i === 0 ? 'Building' : 'Pending' }))).map((step, idx) => {
+              {(steps.length ? steps : TIMELINE_STEPS.map((n, i) => ({ name: n, status: i === 0 ? 'Building' : 'Pending', detail: '' }))).map((step, idx) => {
                 const isHealthy = step.status === 'Healthy';
                 const isCurrent = step.status === 'Building' || step.status === 'Running';
                 const isFailed = step.status === 'Failed';
@@ -351,7 +355,7 @@ export const DeploymentProgressPage: React.FC = () => {
             </div>
             <div>
               <span className="text-slate-500 text-[10px] uppercase font-bold block">Branch</span>
-              <span className="text-white font-semibold font-mono">{project?.defaultBranch || 'main'}</span>
+              <span className="text-white font-semibold font-mono">{project?.branch || 'main'}</span>
             </div>
             <div>
               <span className="text-slate-500 text-[10px] uppercase font-bold block">Build Time</span>
